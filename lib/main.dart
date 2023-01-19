@@ -7,6 +7,13 @@ import 'google_sign_in.dart';
 
 void main() {
   runApp(SignInScreen());
+  initFirebase();
+}
+
+Future<void> initFirebase() async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 }
 
 class SignInScreen extends StatefulWidget {
@@ -54,22 +61,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     ],
                   ),
                 ),
-                FutureBuilder(
-                  future: Authentication.initializeFirebase(context: context),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Text(snapshot.error.toString());
-                    } else if (snapshot.connectionState ==
-                        ConnectionState.done) {
-                      return GoogleSignInButton();
-                    }
-                    return CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Colors.white,
-                      ),
-                    );
-                  },
-                ),
+                GoogleSignInButton(),
               ],
             ),
           ),

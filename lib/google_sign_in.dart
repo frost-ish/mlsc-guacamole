@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'authentication.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class GoogleSignInButton extends StatefulWidget {
   @override
@@ -33,6 +34,9 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
                 setState(() {
                   _isSigningIn = true;
                 });
+
+                User? user =
+                    await Authentication.signInWithGoogle(context: context);
 
                 // TODO: Add a method call to the Google Sign-In authentication
 
