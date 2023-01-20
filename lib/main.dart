@@ -72,7 +72,10 @@ class _SignInScreenState extends State<SignInScreen> {
 }
 
 void signIn() {
-  Authentication().signInWithGoogle();
+  Authentication().signInWithGoogle().then((value) {
+    User? user = value.user;
+    print("${user!.providerData[0].displayName} has signed in!");
+  });
 }
 
 class Authentication {
