@@ -1,9 +1,12 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
 
 void main() {
   runApp(SignInScreen());
@@ -79,6 +82,7 @@ class _FirstPageState extends State<FirstPage> {
                   Authentication().signInWithGoogle().then(
                     (value) {
                       User? user = value.user;
+                      updateOnDatabase(user!);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -118,6 +122,12 @@ class Authentication {
     // Once signed in, return the UserCredential
     return await FirebaseAuth.instance.signInWithCredential(credential);
   }
+}
+
+Future<void> updateOnDatabase(User user) async {
+  final databaseRef =
+      FirebaseDatabase.instance.ref().child('Users').child(user.uid);
+  databaseRef.child('Name').set(user.providerData[0].displayName);
 }
 
 class SecondPage extends StatelessWidget {
@@ -161,19 +171,17 @@ class SecondPage extends StatelessWidget {
                           fontSize: 20,
                         ),
                       ),
+                      Spacer(),
                       Align(
-                        alignment: Alignment.bottomCenter,
+                        alignment: Alignment.center,
                         child: ElevatedButton(
-                          onPressed: null,
-                          style: ButtonStyle(
-                              backgroundColor:
-                                  MaterialStateProperty.all(Colors.blueGrey)),
+                          onPressed: (() => showFilePicker(user!)),
                           child: Text(
-                            'Click here to upload your vaccination certificate',
+                            'Upload your vaccination certificate',
                             style: TextStyle(color: Colors.white, fontSize: 10),
                           ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -183,5 +191,28 @@ class SecondPage extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+Future<void> showFilePicker(User user) async {
+  FilePickerResult? result = await FilePicker.platform
+      .pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+
+  if (result != null) {
+    File file = File(result.files.single.path!);
+    final storageRef = FirebaseStorage.instance
+        .ref()
+        .child('VaccinationCertificates')
+        .child('${user.uid}.pdf');
+    await storageRef.putFile(file);
+    final url = await storageRef.getDownloadURL();
+    FirebaseDatabase.instance
+        .ref()
+        .child('Users')
+        .child(user.uid)
+        .child('VacCerf')
+        .set(url);
+  } else {
+    // User canceled the picker
   }
 }
